@@ -3,7 +3,6 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import viewsets, filters, permissions
-from rest_framework.pagination import LimitOffsetPagination
 
 from posts.models import Post, Group, Comment, Follow, User
 from .serializers import PostSerializer, GroupSerializer, UserSerializer
@@ -25,9 +24,6 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly)
 
-    # Пагинация
-    pagination_class = LimitOffsetPagination
-
     # Фильтрация, сортировка и поиск
     filter_backends = (DjangoFilterBackend, filters.SearchFilter,
                        filters.OrderingFilter)
@@ -47,9 +43,6 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly)
 
-    # Пагинация
-    pagination_class = LimitOffsetPagination
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет комментов."""
@@ -57,9 +50,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly)
-
-    # Пагинация
-    pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
@@ -83,8 +73,7 @@ class FollowViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Возвращает все подписки пользователя, сделавшего запрос"""
-        new_queryset = Follow.objects.filter(user=self.request.user)
-        return new_queryset
+        return self.request.user.follower.all()
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
